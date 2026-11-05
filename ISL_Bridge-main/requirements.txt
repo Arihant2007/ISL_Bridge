@@ -1,7 +1,7 @@
 --extra-index-url https://download.pytorch.org/whl/cpu
 streamlit>=1.40,<2
 streamlit-webrtc>=0.47.9,<0.80
-av>=12,<15
+av>=16,<20
 torch==2.5.1+cpu
 numpy>=1.26,<2
 mediapipe==0.10.14
