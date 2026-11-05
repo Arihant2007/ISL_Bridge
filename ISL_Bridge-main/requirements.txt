@@ -6,6 +6,7 @@ torch==2.5.1+cpu
 numpy>=1.26,<2
 mediapipe==0.10.14
 opencv-contrib-python==4.10.0.84
+opencv-contrib-python-headless==4.10.0.84
 deep-translator>=1.11,<2
 gTTS>=2.5,<3
 groq>=0.11,<2
