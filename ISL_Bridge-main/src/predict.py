@@ -3,45 +3,56 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import numpy as np
 import torch
 import torch.nn.functional as F
-import numpy as np
 from model import ISLModel
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-model_path = os.path.join(BASE_DIR, "..", "models", "isl_model.pth")
-labels_path = os.path.join(BASE_DIR, "..", "models", "labels_integers.pth")
+MODEL_PATH = os.path.join(BASE_DIR, "..", "models", "isl_model.pth")
+LABELS_PATH = os.path.join(BASE_DIR, "..", "models", "labels_integers.pth")
 
-model = ISLModel()
-weights = torch.load(model_path, weights_only=True)
-model.load_state_dict(weights)
-model.eval()  # switching to evaluation mode - Dropout is disabled
+model = None
+integers_labels = {}
+MODEL_ERROR = None
 
-# key - labels, value - integers
-labels_integers = torch.load(labels_path, weights_only=True)
+try:
+    # Git LFS pointer text files are not usable PyTorch checkpoints.
+    with open(MODEL_PATH, "rb") as checkpoint:
+        if checkpoint.read(128).startswith(b"version https://git-lfs.github.com/spec/v1"):
+            raise RuntimeError("Model checkpoint is a Git LFS pointer; download the actual model file.")
+    with open(LABELS_PATH, "rb") as labels_file:
+        if labels_file.read(128).startswith(b"version https://git-lfs.github.com/spec/v1"):
+            raise RuntimeError("Label map is a Git LFS pointer; download the actual label file.")
 
-# key - integers, value - labels
-integers_labels = {value: key for key, value in labels_integers.items()}
+    model = ISLModel()
+    model.load_state_dict(torch.load(MODEL_PATH, map_location="cpu", weights_only=True))
+    model.eval()
+    labels_integers = torch.load(LABELS_PATH, map_location="cpu", weights_only=True)
+    integers_labels = {value: key for key, value in labels_integers.items()}
+except Exception as exc:
+    MODEL_ERROR = str(exc)
 
 
-def predict_sign(d) -> str:
-    """Return the predicted sign label (string)."""
+def predict_sign(d) -> str | None:
     label, _ = predict_sign_with_confidence(d)
     return label
 
 
-def predict_sign_with_confidence(d) -> tuple[str, float]:
-    """Return (label, confidence) where confidence is in [0, 1]."""
-    data = np.array(d)
-    data_x = torch.tensor(data, dtype=torch.float32).unsqueeze(0)  # (1, 126)
+def predict_sign_with_confidence(d) -> tuple[str | None, float]:
+    """Return (label, confidence), or (None, 0) when model files are unavailable."""
+    if model is None:
+        return None, 0.0
+
+    data = np.asarray(d, dtype=np.float32)
+    if data.size != 126:
+        return None, 0.0
+    data_x = torch.from_numpy(data).unsqueeze(0)
 
     with torch.no_grad():
-        output = model(data_x)
-        probs = F.softmax(output, dim=1)          # (1, num_classes)
-        confidence, prediction = probs.max(dim=1)  # both (1,)
-        label = integers_labels[prediction[0].item()]
-        conf_val = confidence[0].item()
-
-    return label, conf_val
-
-
+        probs = F.softmax(model(data_x), dim=1)
+        confidence, prediction = probs.max(dim=1)
+        label = integers_labels.get(prediction.item())
+        if label is None:
+            return None, 0.0
+        return label, float(confidence.item())
