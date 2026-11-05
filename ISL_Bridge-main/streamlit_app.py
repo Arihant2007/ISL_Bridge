@@ -23,7 +23,7 @@ from gtts import gTTS
 
 # ── Path setup so src/* imports work ──────────────────────────────────────────
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
-from predict import predict_sign_with_confidence
+from predict import predict_sign_with_confidence, model as isl_model, MODEL_ERROR
 from text_builder import TextAnalyzer
 from translate import translate
 
@@ -446,6 +446,10 @@ if speak_btn:
 col_vid, col_panel = st.columns([1.5, 1], gap="medium")
 
 with col_vid:
+    if isl_model is None:
+        st.warning("The trained classifier is unavailable. Install the actual model and label checkpoint files to enable sign recognition.")
+        if MODEL_ERROR:
+            st.caption(MODEL_ERROR)
     webrtc_ctx = webrtc_streamer(
         key="isl-bridge",
         mode=WebRtcMode.SENDRECV,
