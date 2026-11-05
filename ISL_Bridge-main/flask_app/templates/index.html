@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISL Bridge</title>
+    <script src="/static/script.js" defer></script>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Hidden canvas for capturing frames -->
+    <canvas id="canvas" style="display:none"></canvas>
+
+    <!-- ═══════════════ HEADER ═══════════════ -->
+    <div id="header">
+        <div class="header-left">
+            <span class="logo-icon">🤝</span>
+            <div>
+                <h1>ISL Bridge</h1>
+                <h2>Indian Sign Language · Real-time Fingerspelling</h2>
+            </div>
+        </div>
+        <div class="header-badges">
+            <span class="badge">34 Signs</span>
+            <span class="badge">LLM Word-Guess</span>
+            <span class="badge">Multilingual</span>
+        </div>
+    </div>
+
+    <!-- ═══════════════ SETUP SCREEN ═══════════════ -->
+    <div id="setup-screen">
+        <div class="setup-card">
+            <h3 class="setup-title">Start Session</h3>
+
+            <div class="source-options">
+                <label class="source-label">
+                    <input type="radio" name="source" value="camera" id="camera-button">
+                    <span class="source-icon">📷</span>
+                    <span>Webcam</span>
+                </label>
+                <label class="source-label">
+                    <input type="radio" name="source" value="video" id="video-button">
+                    <span class="source-icon">🎬</span>
+                    <span>Video File</span>
+                </label>
+            </div>
+
+            <div id="file-input" style="display:none">
+                <input type="file" accept="video/*" id="video-file">
+            </div>
+
+            <button id="start" style="display:none">▶ Start</button>
+            <p id="prompt" style="display:none" class="error-msg"></p>
+        </div>
+    </div>
+
+    <!-- ═══════════════ MAIN SCREEN ═══════════════ -->
+    <div id="main-screen" style="display:none">
+
+        <!-- Top control bar -->
+        <div class="control-bar">
+            <div class="control-bar-left">
+                <button id="speak" class="btn-speak" title="Speak the current sentence">🔊 Speak</button>
+                <button id="reset-word" class="btn-warn" title="Erase the current word in progress">✕ Word</button>
+                <button id="reset" class="btn-warn" title="Clear everything and restart">↺ Reset</button>
+                <button id="pause" style="display:none" class="btn-pause">⏸ Pause</button>
+            </div>
+            <div class="control-bar-right">
+                <div class="lang-wrap">
+                    <label class="lang-label">🌐</label>
+                    <select id="language">
+                        <option value="en">english</option>
+                    </select>
+                </div>
+                <button id="end" class="btn-end" title="End session">✕ End</button>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="content-row">
+
+            <!-- Video feed -->
+            <div class="video-container">
+                <video id="video-feed" autoplay muted playsinline></video>
+                <div class="video-overlay-hint" id="video-hint">Position hands in frame</div>
+            </div>
+
+            <!-- Right panel -->
+            <div class="right-panel">
+
+                <!-- Sign readout -->
+                <div class="card sign-card">
+                    <span class="card-label">Current Sign</span>
+                    <div class="sign-display">
+                        <span id="confirmed-sign" class="sign-glyph">–</span>
+                        <div class="meters">
+                            <div class="meter-row">
+                                <span class="meter-label">CONF</span>
+                                <div class="meter-track">
+                                    <div id="conf-bar" class="meter-fill conf-fill"></div>
+                                </div>
+                                <span id="conf-pct" class="meter-pct">0%</span>
+                            </div>
+                            <div class="meter-row">
+                                <span class="meter-label">HOLD</span>
+                                <div class="meter-track">
+                                    <div id="hold-bar" class="meter-fill hold-fill"></div>
+                                </div>
+                                <span id="hold-pct" class="meter-pct">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Word in progress -->
+                <div class="card">
+                    <span class="card-label">Word in Progress</span>
+                    <span id="word-formed-so-far" class="word-value">–</span>
+                </div>
+
+                <!-- Sentence -->
+                <div class="card sentence-card">
+                    <div class="sentence-header">
+                        <span class="card-label">Sentence</span>
+                        <button id="copy-btn" class="btn-copy" title="Copy sentence">⎘ Copy</button>
+                    </div>
+                    <span id="sentence" class="sentence-value"></span>
+                </div>
+
+                <!-- Session history -->
+                <div class="card history-card">
+                    <span class="card-label">Sign History</span>
+                    <div id="history-scroll" class="history-scroll">
+                        <span class="history-empty">No signs confirmed yet</span>
+                    </div>
+                </div>
+
+                <p id="prompt2" style="display:none" class="warn-msg"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ GOODBYE SCREEN ═══════════════ -->
+    <div id="goodbye-screen" style="display:none">
+        <div class="goodbye-inner">
+            <span class="goodbye-icon">👋</span>
+            <p class="goodbye-title">Session Ended</p>
+            <p class="goodbye-sub">Refresh the page to start a new session</p>
+        </div>
+    </div>
+
+</body>
+</html>
